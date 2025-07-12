@@ -1,4 +1,14 @@
-from clases import Dueno, Mascota, Consulta
+"""Módulo principal del sistema veterinario."""
+
+# El import de ``clases`` debe funcionar tanto si este archivo se ejecuta como
+# parte del paquete ``Sprint4`` (``Sprint4.SistemaVet``) como si se lanza de
+# forma independiente desde su carpeta.  Para mantener la compatibilidad en
+# ambos casos se intenta primero el import relativo y, si falla, se usa el
+# absoluto.
+try:  # Import cuando se usa como paquete (p.ej. ``import Sprint4.SistemaVet``)
+    from .clases import Dueno, Mascota, Consulta
+except ImportError:  # Import directo al ejecutar desde el propio directorio
+    from clases import Dueno, Mascota, Consulta
 
 
 class SistemaVeterinario:
@@ -20,7 +30,6 @@ class SistemaVeterinario:
             return
 
         dueno = Dueno(nombre, documento, correo, telefono)
-        self.duenos.append(dueno)
 
         # Datos de la mascota
         print("\n🐶 Datos de la mascota:")
@@ -43,6 +52,9 @@ class SistemaVeterinario:
         mascota = Mascota(
             nombre_mascota, especie, raza, edad, peso, motivo, dueno
         )
+        # Solo en este punto sabemos que el registro fue exitoso; ahora
+        # agregamos al dueño y a la mascota a sus respectivas listas.
+        self.duenos.append(dueno)
         self.mascotas.append(mascota)
 
         print("\n✅ Paciente registrado correctamente.")
