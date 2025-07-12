@@ -1,4 +1,14 @@
-from SistemaVet import SistemaVeterinario
+"""Punto de entrada del sistema veterinario."""
+
+# Al igual que en ``SistemaVet``, este módulo debe funcionar tanto si se
+# ejecuta como parte del paquete ``Sprint4`` (por ejemplo mediante
+# ``python -m Sprint4.main``) como si se lanza de forma independiente desde su
+# directorio.  Por ello, probamos primero el import relativo y, en caso de
+# falla, recurrimos al absoluto.
+try:  # Cuando se usa como paquete
+    from .SistemaVet import SistemaVeterinario
+except ImportError:  # Ejecución directa
+    from SistemaVet import SistemaVeterinario
 
 
 def main():
