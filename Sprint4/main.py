@@ -1,4 +1,4 @@
-from SistemaVet import SistemaVeterinario
+from sistema_vet import SistemaVeterinario
 
 
 def main():

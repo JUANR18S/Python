@@ -1,4 +1,13 @@
-# Definición de clases para el sistema veterinario
+import logging
+
+# Configuración básica del logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Clases del sistema veterinario
+
 
 class Dueno:
     def __init__(self, nombre, documento, correo, telefono):
@@ -6,14 +15,14 @@ class Dueno:
         self.documento = documento
         self.correo = correo
         self.telefono = telefono
+        logging.info(f"Dueño creado: {self.nombre} ({self.documento})")
 
     def __str__(self):
         return f"{self.nombre} - Doc: {self.documento} - Tel: {self.telefono}"
 
 
 class Mascota:
-    def __init__(self, nombre, especie, raza,
-                 edad, peso, motivo, dueno):
+    def __init__(self, nombre, especie, raza, edad, peso, motivo, dueno):
         self.nombre = nombre
         self.especie = especie
         self.raza = raza
@@ -22,9 +31,16 @@ class Mascota:
         self.motivo = motivo
         self.dueno = dueno
         self.consultas = []
+        logging.info(
+            (
+                f"Mascota creada: {self.nombre} ({self.especie}) - "
+                f"Dueño: {self.dueno.nombre}"
+            )
+        )
 
     def agregar_consulta(self, consulta):
         self.consultas.append(consulta)
+        logging.info(f"Consulta agregada a {self.nombre}: {consulta}")
 
     def __str__(self):
         return (
@@ -42,6 +58,6 @@ class Consulta:
 
     def __str__(self):
         return (
-            f"Consulta [{self.fecha}]: {self.motivo} - "
+            f"📅 {self.fecha} - Motivo: {self.motivo} - "
             f"Diagnóstico: {self.diagnostico}"
         )
