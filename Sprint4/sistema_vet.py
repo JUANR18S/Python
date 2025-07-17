@@ -1,8 +1,10 @@
 from clases import Dueno, Mascota, Consulta
 import logging
+import json
+import csv
 
 logging.basicConfig(
-    filename='clinica_veterinaria.log',
+    filename='log/clinica_veterinaria.log',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
@@ -12,8 +14,72 @@ class SistemaVeterinario:
     def __init__(self):
         self.mascotas = []
         self.duenos = []
+        logging.info("Sistema Veterinario iniciado.")
+
+    def cargar_datos(self):
+        logging.info("Cargando datos del sistema...")
+        # Cargar datos de los archivos JSON
+        try:
+            with open('data/duenos.json', 'r', encoding='utf-8') as f:
+                self.duenos = [
+                    Dueno.from_dict(data) for data in json.load(f)
+                ]
+            with open('data/mascotas.json', 'r', encoding='utf-8') as f:
+                self.mascotas = [
+                    Mascota.from_dict(data, self.duenos)
+                    for data in json.load(f)
+                ]
+            logging.info("Datos cargados exitosamente.")
+        except FileNotFoundError:
+            logging.warning(
+                "Archivos de datos no encontrados. Iniciando vacío."
+            )
+        except json.JSONDecodeError as e:
+            logging.error(f"Error al cargar datos: {e}")
+
+    def guardar_datos(self):
+        logging.info("Guardando datos del sistema...")
+        # Guardar datos en los archivos JSON
+        try:
+            with open('data/duenos.json', 'w', encoding='utf-8') as f:
+                json.dump(
+                    [dueno.to_dict() for dueno in self.duenos],
+                    f, indent=4, ensure_ascii=False
+                )
+            with open('data/mascotas.json', 'w', encoding='utf-8') as f:
+                json.dump(
+                    [mascota.to_dict() for mascota in self.mascotas],
+                    f, indent=4, ensure_ascii=False
+                )
+            logging.info("Datos guardados exitosamente.")
+        except Exception as e:
+            logging.error(f"Error al guardar datos: {e}")
+
+    def exportar_csv(self):
+        logging.info("Exportando datos a CSV...")
+        # Exportar datos a CSV
+        try:
+            with open(
+                'data/mascotas.csv', 'w', newline='', encoding='utf-8'
+            ) as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    "Nombre", "Especie", "Raza", "Edad", "Peso",
+                    "Motivo", "Dueño"
+                ])
+                for mascota in self.mascotas:
+                    writer.writerow([
+                        mascota.nombre, mascota.especie, mascota.raza,
+                        mascota.edad, mascota.peso, mascota.motivo,
+                        mascota.dueno.nombre
+                    ])
+            logging.info("Datos exportados a CSV exitosamente.")
+        except Exception as e:
+            print(f"Error al exportar a CSV: {e}")
+            logging.error(f"Error al exportar a CSV: {e}")
 
     def registrar_paciente_completo(self):
+
         print("\n🐾 Registro completo de paciente 🐾")
 
         print("\n👤 Datos del humano a cargo:")
@@ -23,8 +89,20 @@ class SistemaVeterinario:
         telefono = input("Celular: ").strip()
 
         if not nombre or not documento or not correo or not telefono:
-            print("❌ Todos los campos del dueño son obligatorios.")
+            print("⚠️ Todos los campos del dueño son obligatorios.")
             return
+
+        # 🔍 Validar documento duplicado
+        for dueno in self.duenos:
+            if dueno.documento == documento:
+                print(
+                    (
+                        f"🚫 Ya existe un dueño registrado con el documento "
+                        f"'{documento}'.\n"
+                        "💡 Si es un error, por favor verifica los datos."
+                    )
+                )
+                return
 
         dueno = Dueno(nombre, documento, correo, telefono)
         self.duenos.append(dueno)
@@ -33,29 +111,50 @@ class SistemaVeterinario:
         nombre_mascota = input("Nombre: ").strip()
         especie = input("Especie: ").strip()
         raza = input("Raza: ").strip()
+        edad = input("Edad: ").strip()
+        peso = input("Peso: ").strip()
+        motivo = input("Motivo de registro: ").strip()
 
-        try:
-            edad = int(input("Edad (en años): ").strip())
-            if edad < 0:
-                print("❌ La edad no puede ser negativa.")
+        # 🔁 Validar si el dueño ya tiene una mascota con el mismo nombre
+        for mascota_existente in self.mascotas:
+            if (
+                mascota_existente.nombre.lower() == nombre_mascota.lower()
+                and mascota_existente.dueno.documento == documento
+            ):
+                print(
+                    f"⚠️ Ya tienes una mascota registrada con el nombre "
+                    f"'{nombre_mascota}'.\n"
+                    "💡 Si es otra mascota, por favor usa un apodo o "
+                    "añade una distinción."
+                )
                 return
-        except ValueError:
-            print("❌ Ingresa un número válido.")
-            return
-
-        try:
-            peso = float(input("Peso (en kg): ").strip())
-            if peso <= 0:
-                print("❌ El peso debe ser mayor que cero.")
+        for dueno in self.duenos:
+            if dueno.documento == documento:
+                print(
+                    (
+                        f"🚫 Ya existe un dueño registrado con el documento "
+                        f"'{documento}'.\n"
+                        "💡 Si es un error, por favor verifica los datos."
+                    )
+                )
                 return
-        except ValueError:
-            print("❌ Peso inválido. Debe ser un número.")
-            return
 
-        motivo = input("Motivo de consulta: ").strip()
+        dueno = Dueno(nombre, documento, correo, telefono)
+        self.duenos.append(dueno)
 
-        if not nombre_mascota or not especie or not raza or not motivo:
-            print("❌ Todos los campos de la mascota son obligatorios.")
+        print("\n🐶 Datos de la mascota:")
+        nombre_mascota = input("Nombre: ").strip()
+        especie = input("Especie: ").strip()
+        raza = input("Raza: ").strip()
+        edad = input("Edad: ").strip()
+        peso = input("Peso: ").strip()
+        motivo = input("Motivo de registro: ").strip()
+
+        if (
+            not nombre_mascota or not especie or not raza or
+            not edad or not peso or not motivo
+        ):
+            print("⚠️ Todos los campos de la mascota son obligatorios.")
             return
 
         mascota = Mascota(
@@ -63,11 +162,11 @@ class SistemaVeterinario:
         )
         self.mascotas.append(mascota)
 
-        logging.info(
-            f"Mascota registrada: {mascota.nombre} ({mascota.especie}) "
-            f"- Dueño: {dueno.nombre}"
+        print(
+            f"✅ ¡Paciente {nombre_mascota} registrado exitosamente "
+            f"con su humano {nombre}! 🐕‍🦺💙"
         )
-        print("\n✅ Paciente registrado correctamente.")
+        logging.info(f"Paciente registrado: {nombre_mascota}, dueño: {nombre}")
 
     def registrar_consulta(self):
         if not self.mascotas:
@@ -87,13 +186,22 @@ class SistemaVeterinario:
             print("❌ Ups, eso no parece un número válido. Intenta de nuevo.")
             return
         except IndexError:
-            print("❌ El número que ingresaste no corresponde.")
+            print(
+                "❌ El número que ingresaste no corresponde a ninguna mascota."
+            )
             return
 
         print(f"\n✍️ Registrando consulta para {mascota.nombre}:")
         fecha = input("📅 Fecha (dd/mm/aaaa): ").strip()
         motivo = input("🩺 Motivo de la consulta: ").strip()
         diagnostico = input("🧾 Diagnóstico: ").strip()
+
+        if not fecha or not motivo or not diagnostico:
+            print(
+                "⚠️ Todos los campos son obligatorios para "
+                "registrar la consulta."
+            )
+            return
 
         consulta = Consulta(fecha, motivo, diagnostico, mascota)
         mascota.agregar_consulta(consulta)
