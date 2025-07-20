@@ -14,7 +14,9 @@ class SistemaVeterinario:
     def __init__(self):
         self.mascotas = []
         self.duenos = []
+        self.consultas = []
         logging.info("Sistema Veterinario iniciado.")
+        self.cargar_datos()  # 🧠 Esto carga los datos al iniciar
 
     def cargar_datos(self):
         logging.info("Cargando datos del sistema...")
@@ -38,20 +40,32 @@ class SistemaVeterinario:
             logging.error(f"Error al cargar datos: {e}")
 
     def guardar_datos(self):
-        logging.info("Guardando datos del sistema...")
-        # Guardar datos en los archivos JSON
         try:
-            with open('data/duenos.json', 'w', encoding='utf-8') as f:
+            logging.info("Guardando datos del sistema...")
+
+            with open("data/duenos.json", "w", encoding="utf-8") as f:
                 json.dump(
                     [dueno.to_dict() for dueno in self.duenos],
-                    f, indent=4, ensure_ascii=False
+                    f,
+                    indent=4
                 )
-            with open('data/mascotas.json', 'w', encoding='utf-8') as f:
+
+            with open("data/mascotas.json", "w", encoding="utf-8") as f:
                 json.dump(
                     [mascota.to_dict() for mascota in self.mascotas],
-                    f, indent=4, ensure_ascii=False
+                    f,
+                    indent=4
                 )
-            logging.info("Datos guardados exitosamente.")
+
+            with open("data/consultas.json", "w", encoding="utf-8") as f:
+                json.dump(
+                    [consulta.to_dict() for consulta in self.consultas],
+                    f,
+                    indent=4
+                )
+
+            print("📦 Se ha guardado toda la información en JSON.")
+
         except Exception as e:
             logging.error(f"Error al guardar datos: {e}")
 
@@ -80,7 +94,7 @@ class SistemaVeterinario:
 
     def registrar_paciente_completo(self):
 
-        print("\n🐾 Registro completo de paciente 🐾")
+        print("\n🐾 Inicio de registro 🐾")
 
         print("\n👤 Datos del humano a cargo:")
         nombre = input("Nombre completo: ").strip()
@@ -128,27 +142,6 @@ class SistemaVeterinario:
                     "añade una distinción."
                 )
                 return
-        for dueno in self.duenos:
-            if dueno.documento == documento:
-                print(
-                    (
-                        f"🚫 Ya existe un dueño registrado con el documento "
-                        f"'{documento}'.\n"
-                        "💡 Si es un error, por favor verifica los datos."
-                    )
-                )
-                return
-
-        dueno = Dueno(nombre, documento, correo, telefono)
-        self.duenos.append(dueno)
-
-        print("\n🐶 Datos de la mascota:")
-        nombre_mascota = input("Nombre: ").strip()
-        especie = input("Especie: ").strip()
-        raza = input("Raza: ").strip()
-        edad = input("Edad: ").strip()
-        peso = input("Peso: ").strip()
-        motivo = input("Motivo de registro: ").strip()
 
         if (
             not nombre_mascota or not especie or not raza or
@@ -158,8 +151,9 @@ class SistemaVeterinario:
             return
 
         mascota = Mascota(
-            nombre_mascota, especie, raza, edad, peso, motivo, dueno
+            nombre_mascota, especie, raza, edad, peso, motivo, documento
         )
+
         self.mascotas.append(mascota)
 
         print(
@@ -167,6 +161,9 @@ class SistemaVeterinario:
             f"con su humano {nombre}! 🐕‍🦺💙"
         )
         logging.info(f"Paciente registrado: {nombre_mascota}, dueño: {nombre}")
+
+        self.guardar_datos()
+        print("📦 Se ha guardado toda la información en JSON.")
 
     def registrar_consulta(self):
         if not self.mascotas:
@@ -205,6 +202,7 @@ class SistemaVeterinario:
 
         consulta = Consulta(fecha, motivo, diagnostico, mascota)
         mascota.agregar_consulta(consulta)
+        self.consultas.append(consulta)
 
         print(f"✅ ¡Consulta registrada exitosamente para {mascota.nombre}! 💙")
         logging.info(f"Consulta registrada para: {mascota.nombre}")
@@ -219,6 +217,7 @@ class SistemaVeterinario:
             print(mascota)
 
     def ver_historial(self):
+
         if not self.mascotas:
             print("🐾 Aún no tienes pacientes registrados.")
             return
@@ -244,3 +243,15 @@ class SistemaVeterinario:
         else:
             for consulta in mascota.consultas:
                 print(consulta)
+
+    def guardar_consultas_json(self):
+        try:
+            with open('data/consultas.json', 'w') as f:
+                json.dump(
+                    [consulta.to_dict() for consulta in self.consultas],
+                    f,
+                    indent=4
+                )
+            logging.info("Consultas guardadas exitosamente en JSON.")
+        except Exception as e:
+            logging.error(f"Error al guardar consultas en JSON: {e}")
